@@ -2,6 +2,7 @@
 
 library(tidyverse)
 library(ggforce)
+#install.packages("ggforce")
 
 # Construção do circulo
 ggplot() +
@@ -15,7 +16,7 @@ ggplot() +
   coord_fixed() +
   theme_void()
 
-N = 100
+N = 2000
 
 #set.seed(123)
 base <- tibble(E = 1:N, 
@@ -40,7 +41,8 @@ ggplot() +
   theme_void() +
   theme(legend.position = "none")
 
-###
+#
+
 
 base %>% 
   mutate(freq_rel = cumsum(flag == "dentro")/E) %>%
@@ -50,5 +52,46 @@ base %>%
             color = "red") +
   geom_hline(yintercept=pi/4, color="blue") +
   labs(x = "Experimento", y = "Frequencia Relativa") +
-  ggtitle("Monto Carlo", subtitle = "Valor de p")
+  ggtitle("Monto Carlo", subtitle = "Valor de p") +
+  ylim(c(0,1))
+
+
+#########
+
+
+
+
+N = 20
+
+#set.seed(123)
+base <- tibble(E = 1:N, 
+               x = runif(N, min = -1, max = 1),
+               y = runif(N, min = -1, max = 1),
+               flag = if_else(x^2 + y^2 <= 1, "dentro", "fora"))
+
+
+
+
+base %>% 
+  mutate(cumsum = cumsum(flag == "dentro"),
+         freq_rel = cumsum/E) %>%
+  ggplot() + 
+  geom_line(aes(x = E, y = freq_rel), 
+            linetype = 2, 
+            color = "red") +
+  geom_point(aes(x = E, y = freq_rel, color = flag)) +
+  geom_hline(yintercept=pi/4, color="blue") +
+  labs(x = "Experimento", y = "Frequencia Relativa") +
+  ggtitle("Monto Carlo", subtitle = "Valor de p") +
+  ylim(c(0,1))
+
+base <- base %>% 
+  mutate(cumsum = cumsum(flag == "dentro"),
+         freq_rel = cumsum/E)
+
+base %>% pull(freq_rel) %>% last()
+
+base %>% slice_max(order_by = E) %>% pull(freq_rel)
+
+base$freq_rel[N]
 
