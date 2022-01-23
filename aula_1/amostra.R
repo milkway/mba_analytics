@@ -1,3 +1,6 @@
+library(tidyverse)
+library(ggforce)
+
 
 amostra = rnorm(10, mean = 1.70, sd = 0.5)
 
@@ -45,15 +48,13 @@ base %>%
   summarise(Média = mean(Valores),
             Desvio = sd(Valores))
   
-Replicas = 10
-n = 15
+Replicas = 200
 
-base <- expand_grid(Tamanho = c(10, 500, 25000),
-                    R = , 
-                    Indivíduo = 1:n) %>% 
-  mutate(Valores = rnorm(n(), mean = 1.7, sd = .5)) 
 
-base %>% count(Tamanho)
+base <- expand_grid(Tamanho = c(10L, 100L, 1000L),
+                    R = 1:Replicas) %>%
+  mutate(Valores = map(Tamanho, rnorm, mean = 1.7, sd = .5)) %>% 
+  unnest(Valores) 
 
 base %>% 
   group_by(Tamanho, R) %>% 
@@ -63,3 +64,16 @@ base %>%
             desvio_x_barra = sd(Média), 
             q1 = quantile(Média, .01),
             q99 = quantile(Média, .99))  
+
+base %>% 
+  group_by(Tamanho, R) %>% 
+  summarise(Média = mean(Valores), .groups = "drop") %>%
+  ggplot() +
+  geom_histogram(aes(x = Média, ..density..), 
+                 color="grey60",
+                 fill="cornsilk",
+                 bins = 50,
+                 size=0.2) +
+  geom_vline(xintercept = 1.7, size = .5, color = "red") +
+  facet_col(. ~ paste("Tamanho ", Tamanho), scales = "free_y")
+  
