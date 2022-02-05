@@ -1,0 +1,110 @@
+---
+title: "Simulação de Monte Carlo"
+author: "André Leite"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+´
+```{r}
+library(tidyverse)
+library(kableExtra)
+```
+
+## Idéia
+
+- Repetir uma série de experimentos
+- Em cada repetição, simular um envento
+- Contar quantos sucessos tivemos
+- Cálcular a média.
+
+## Estimação do valor de $pi$
+
+
+```{r montecarlo, echo=TRUE}
+numReplicas <- 100000
+
+set.seed(123)
+pontos <- tibble(
+  x = runif(numReplicas, -1, 1),
+  y = runif(numReplicas, -1, 1)
+)
+
+#pontos %>% top_n(10) %>%  kbl()
+```
+
+Teste para ver se ponto caiu dentro do círculo de raio 1.
+
+```{r}
+pontos <- pontos %>% 
+  mutate(raio = sqrt(x^2 + y^2),
+         pontoNoCirculo = if_else(raio <= 1, TRUE, FALSE))
+
+#pontos %>% top_n(10) %>% kbl()
+```
+
+Gráfico
+
+
+```{r}
+pontos %>%
+  ggplot() +
+  geom_point(aes(x=x, y = y, color = pontoNoCirculo), size = .7) +
+  theme_minimal()
+
+```
+
+Cálculo de $\pi$
+
+```{r}
+ratio <- sum(pontos$pontoNoCirculo)/nrow(pontos)
+piApr <- 4*ratio
+print(piApr)
+```
+
+
+## Valores experados
+
+$$
+\mu = E(X) =  \int x f(x)dx
+$$
+
+
+## Monte Carlo
+
+$$
+f(x) = x^2
+$$
+No intervalo de 3 a 7.
+
+$$
+A = \int_3^7 x^2 dx = \big(\frac{x^3}{3}\big)\big|_3^7 = \frac{7^3}{3} - \frac{3^3}{3}  = 105.33\bar{3}
+$$
+
+```{r}
+numReplicas <- 100000
+
+set.seed(123)
+pontos <- tibble(
+  x = runif(numReplicas, 3, 7),
+  y = runif(numReplicas, 0, 7^2),
+  f_x = x^2,
+  abaixo_f = if_else(y <= f_x, TRUE, FALSE))
+```
+
+```{r}
+pontos %>% 
+  ggplot() + geom_point(aes(x= x, y=y, color = abaixo_f))
+```
+
+
+## Estimadores da variância
+
+$$
+S_1^2 = \frac{1}{n-1}\sum_i (x_i - \bar{x})^2
+$$
+$$
+S_2^2 = \frac{1}{n}\sum_i (x_i - \bar{x})^2 
+$$
